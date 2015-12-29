@@ -1,0 +1,147 @@
+package jun;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+String EXCEL_PATH = "D:\\TestCase.xlsx";
+Excel_TC_Create exCreate = new Excel_TC_Create(EXCEL_PATH);
+exCreate.createTestCase();
+
+
+public class Excel_TC_Create {
+	String EXCEL_OUT_PATH;
+	XSSFWorkbook tc;
+	String SUBJECTS = ["","" ];
+	
+	public Excel_TC_Create(String excelOutPath){
+		EXCEL_OUT_PATH = excelOutPath;
+		
+		tc = new XSSFWorkbook(); 
+		initTestCase(tc);
+
+	
+	}
+	public void createTestCase() {
+		createExcel();
+	}
+	
+	private void createExcel() {
+        try {
+            File xlsFile = new File(EXCEL_OUT_PATH);
+            FileOutputStream fileOut = new FileOutputStream(xlsFile);
+            tc.write(fileOut);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+	}
+	
+	private void initTestCase(XSSFWorkbook tc) {
+
+        Sheet sheet1 = tc.createSheet("Sheet1");
+
+        CellStyle cellStyle = tc.createCellStyle();
+        cellStyle.setWrapText(true);
+        cellStyle.setAlignment(HSSFCellStyle.ALIGN_CENTER);
+        cellStyle.setFillForegroundColor(HSSFColor.YELLOW.index);
+        cellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+        cellStyle.setBorderTop(CellStyle.BORDER_THIN);                        
+        cellStyle.setBorderLeft(CellStyle.BORDER_THIN);
+        cellStyle.setBorderRight(CellStyle.BORDER_THIN);
+        cellStyle.setBorderBottom(CellStyle.BORDER_THIN);
+        
+        XSSFFont font = tc.createFont();
+        font.setFontHeightInPoints((short)10);
+        cellStyle.setFont(font);
+   
+        Row row = null;
+        Cell cell = null;
+        
+        row = sheet1.createRow(0);
+ 
+        int cellCount = 0;
+        sheet1.setColumnWidth(cellCount, 2000);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+      cell.setCellStyle(cellStyle);
+       cellCount++;
+       
+        sheet1.setColumnWidth(cellCount, 3000);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+        cell.setCellStyle(cellStyle);
+        cellCount++;
+ 
+        sheet1.setColumnWidth(cellCount, 5000);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+        cell.setCellStyle(cellStyle);
+        cellCount++;
+         
+        sheet1.setColumnWidth(cellCount, 5000);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+        cell.setCellStyle(cellStyle);
+        cellCount++;
+        
+        sheet1.setColumnWidth(cellCount, 9000);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+        cell.setCellStyle(cellStyle);
+        cellCount++;
+        
+        sheet1.setColumnWidth(cellCount, 2900);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+        cell.setCellStyle(cellStyle);
+        cellCount++;
+        
+        sheet1.setColumnWidth(cellCount, 9000);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+        cell.setCellStyle(cellStyle);
+        cellCount++;
+        
+        sheet1.setColumnWidth(cellCount, 2700);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+        cell.setCellStyle(cellStyle);
+        cellCount++;
+        
+        sheet1.setColumnWidth(cellCount, 2500);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+        cell.setCellStyle(cellStyle);
+        cellCount++;
+        
+        sheet1.setColumnWidth(cellCount, 2000);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+        cell.setCellStyle(cellStyle);
+        cellCount++;
+        
+        sheet1.setColumnWidth(cellCount, 5000);
+        cell = row.createCell(cellCount);
+        cell.setCellValue(SUBJECTS[cellCount]);
+        cell.setCellStyle(cellStyle);
+        cellCount++;
+  
+	}
+	
+
+	
+
+}
