@@ -1,0 +1,48 @@
+def resultXmlPath = "D:\\response.xml"
+
+def responseXml = "<project>";
+testRunner.testCase.testSuite.project.getTestSuiteList().each {
+	responseXml = addresponseXmlMessage(responseXml, "<testSuite name=\"" + it.name + "\">");
+	it.getTestCaseList().each {
+		responseXml = addresponseXmlMessage(responseXml, "<testCase name=\"" + it.name + "\">");
+		it.getTestStepList().each {
+				if(it.toString().indexOf("RestTestRequestStep") != -1){  
+					responseXml = addResponseMessage(responseXml, it);
+				}
+		}
+		responseXml = addresponseXmlMessage(responseXml, "</testCase>");
+	}
+	responseXml = addresponseXmlMessage(responseXml, "</testSuite>");
+}
+
+responseXml = responseXml + "</project>";
+createResponseXml(resultXmlPath, responseXml)
+
+
+
+void createResponseXml(def path, def responseXml) {
+	def resultFail = new File(path)
+	try {
+		resultFail.write(responseXml, "UTF-8")
+		resultFail.close()
+	}catch(Exception e) {
+	}
+	log.info(path);
+}
+
+def addResponseMessage(def responseXml, def testStep) {
+	responseXml = addresponseXmlMessage(responseXml, "<testStep name=\"" + testStep.name + "\">");
+	try {
+		responseXml = addresponseXmlMessage(responseXml, "<reponseRaw>\"<![CDATA[" + new String(testStep.testRequest.response.rawResponseData) + "\"]]></reponseRaw>");
+	} catch(Exception e) {
+					
+	}
+	responseXml = addresponseXmlMessage(responseXml, "</testStep>");
+	return responseXml;
+}
+
+def addresponseXmlMessage(def responseXml, def message) {
+	responseXml = responseXml + message;
+	return responseXml;
+}
+				
