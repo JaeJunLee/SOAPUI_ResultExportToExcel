@@ -1,0 +1,145 @@
+
+// Project > TestSuite > TestCase > TestStep 별로 데이터 수집
+
+TestProject project = new TestProject();
+List<TestSuite> TestSuites = new LinkedList<TestSuite>();
+
+TestSuite ts1 = new TestSuite("ts2");
+TestSuites.add(ts1);
+log.info(TestSuites.get(0).getName());
+
+
+
+public class TestProject {
+	List<TestSuite> TEST_SUITES;
+	String NAME;
+
+	public TestProject(String name) {
+		NAME = name;
+	}
+
+	public List<TestSuite> getTestCases() {
+		return TEST_SUITES;
+	}
+
+	public void setCases(List<TestSuite> testSuite) {
+		TEST_SUITES = testSuite;
+	}	
+
+	public String getName() {
+		return NAME;
+	}
+
+	public void setName(String name) {
+		NAME = name;
+	}	
+}
+
+
+
+public class TestSuite {
+	List<TestCase> TEST_CASES;
+	String NAME;
+
+	public TestSuite(String name) {
+		NAME = name;
+	}
+	
+	public List<TestCase> getTestCases() {
+		return TEST_CASES;
+	}
+
+	public void setCases(List<TestCase> testCases) {
+		TEST_CASES = testCases;
+	}	
+	
+	public String getName() {
+		return NAME;
+	}
+
+	public void setName(String name) {
+		NAME = name;
+	}	
+}
+
+
+public class TestCase {
+	List<TestStep> TEST_STEPS;
+	String NAME;
+
+	public TestCase(String name) {
+		NAME = name;
+	}
+
+	public List<TestStep> getTestSteps() {
+		return TEST_STEPS;
+	}
+
+	public void setTestSteps(List<TestStep> testSteps) {
+		TEST_STEPS = testSteps;
+	}	
+
+	public String getName() {
+		return NAME;
+	}
+
+	public void setName(String name) {
+		NAME = name;
+	}	
+}
+
+
+public class TestStep {
+	
+	String REQUEST_RAW;
+	String RESPONSE_RAW;
+	String ASSERTION;
+	String RESULT;
+	String NAME;
+
+	public TestStep(String name) {
+		NAME = name;
+	}
+
+	public void setRequestRaw(String requestRaw) {
+		REQUEST_RAW = requestRaw;
+	}
+
+	public String getRequestRaw() {
+		return REQUEST_RAW;
+	}
+
+	public void setResponseRaw(String responseRaw) {
+		RESPONSE_RAW = responseRaw;
+	}
+
+	public String getResponseRaw() {
+		return RESPONSE_RAW;
+	}
+
+	public void setAssertion(String assertion) {
+		ASSERTION = assertion;
+	}
+
+	public String getAssertion() {
+		return ASSERTION;
+	}
+
+	public void setResult(String result) {
+		RESULT = result;
+	}
+
+	public String getResult() {
+		return RESULT;
+	}
+
+	public String getName() {
+		return NAME;
+	}
+
+	public void setName(String name) {
+		NAME = name;
+	}	
+}
+
+
