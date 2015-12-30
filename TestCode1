@@ -1,48 +1,246 @@
-def resultXmlPath = "D:\\response.xml"
+import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequestStep;
+import com.eviware.soapui.security.assertion.ValidHttpStatusCodesAssertion;
+import com.eviware.soapui.security.assertion.InvalidHttpStatusCodesAssertion;
+import com.eviware.soapui.impl.wsdl.teststeps.assertions.basic.SimpleContainsAssertion;
+import com.eviware.soapui.impl.wsdl.teststeps.assertions.ProGroovyScriptAssertion;
 
-def responseXml = "<project>";
-testRunner.testCase.testSuite.project.getTestSuiteList().each {
-	responseXml = addresponseXmlMessage(responseXml, "<testSuite name=\"" + it.name + "\">");
-	it.getTestCaseList().each {
-		responseXml = addresponseXmlMessage(responseXml, "<testCase name=\"" + it.name + "\">");
-		it.getTestStepList().each {
-				if(it.toString().indexOf("RestTestRequestStep") != -1){  
-					responseXml = addResponseMessage(responseXml, it);
+
+/*
+List temps = testProject.getTestSuites();
+for(TestSuite temp in temps){
+	log.info temp.getName()
+}
+*/
+TestProject project = getProject();
+
+
+
+public TestProject getProject() {
+	def currentProject = testRunner.testCase.testSuite.project;
+	TestProject testProject = new TestProject(currentProject.getName());
+	currentProject.getTestSuiteList().each {
+		
+		TestSuite testSuite = new TestSuite(it.getName());
+		testProject.add(testSuite);
+		
+		it.getTestCaseList().each {
+			
+			TestCase testCase= new TestCase(it.getName());
+			testSuite.add(testCase);
+			
+			it.getTestStepList().each {
+				if(it.toString().indexOf("RestTestRequestStep") == -1){  
+					return true;
 				}
+				TestStep step = makeTestStep(it);
+				testCase.add(step);
+	
+			}
 		}
-		responseXml = addresponseXmlMessage(responseXml, "</testCase>");
 	}
-	responseXml = addresponseXmlMessage(responseXml, "</testSuite>");
+	return testProject;
 }
 
-responseXml = responseXml + "</project>";
-createResponseXml(resultXmlPath, responseXml)
-
-
-
-void createResponseXml(def path, def responseXml) {
-	def resultFail = new File(path)
+public TestStep makeTestStep(RestTestRequestStep testStep) {
+	TestStep step = new TestStep(testStep.getName()); 
 	try {
-		resultFail.write(responseXml, "UTF-8")
-		resultFail.close()
-	}catch(Exception e) {
-	}
-	log.info(path);
-}
+		step.setRequestRaw(new String(testStep.testRequest.response.rawResponseData));
+	}catch(Exception e) { }
 
-def addResponseMessage(def responseXml, def testStep) {
-	responseXml = addresponseXmlMessage(responseXml, "<testStep name=\"" + testStep.name + "\">");
 	try {
-		responseXml = addresponseXmlMessage(responseXml, "<reponseRaw>\"<![CDATA[" + new String(testStep.testRequest.response.rawResponseData) + "\"]]></reponseRaw>");
-	} catch(Exception e) {
-					
-	}
-	responseXml = addresponseXmlMessage(responseXml, "</testStep>");
-	return responseXml;
+		step.setResponseRaw(new String(testStep.testRequest.response.rawRequestData));
+	}catch(Exception e) { }
+
+	try {
+		step.setAssertions(getAssertions(testStep));
+	}catch(Exception e) { }
+
+	try {
+		step.setResult(getAssertionResult(testStep));
+	}catch(Exception e) { }
+	return step;
 }
 
-def addresponseXmlMessage(def responseXml, def message) {
-	responseXml = responseXml + message;
-	return responseXml;
+
+public String getAssertions(RestTestRequestStep step) {
+	def assertionsList = step.getAssertionList()
+	String assertionText = "";
+	for( assertion in assertionsList){
+		//log.info e.getToken() //gives the value of the content to search for
+		
+		if( assertion instanceof ValidHttpStatusCodesAssertion || assertion instanceof InvalidHttpStatusCodesAssertion){
+			assertionText = assertionText + assertion.LABEL + " Expected = " + assertion.codes + "\n";
+          } else if(assertion instanceof SimpleContainsAssertion) {
+          	assertionText = assertionText + assertion.LABEL + " Expected = " + assertion.getToken() + "\n";
+          } else if(assertion instanceof ProGroovyScriptAssertion) {
+			assertionText = assertionText + assertion.LABEL + "\n";
+          }
+           assertion.status
+	}
+	return assertionText;
 }
-				
+
+
+public boolean getAssertionResult(RestTestRequestStep step) {
+	def assertionsList = step.getAssertionList()
+	for( assertion in assertionsList){
+		if(assertion.status.equals("FAILED")) {
+			return false;
+		} else if(assertion.status.equals("VALID")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
+
+
+
+public class TestProject {
+	List<TestSuite> TEST_SUITES;
+	String NAME;
+
+	public TestProject(String name) {
+		NAME = name;
+		TEST_SUITES = new LinkedList<TestSuite>();
+	}
+
+	public void add(TestSuite suite) {
+		TEST_SUITES.add(suite);
+	}
+	
+	public List<TestSuite> getTestSuites() {
+		return TEST_SUITES;
+	}
+
+	public void setCases(List<TestSuite> testSuite) {
+		TEST_SUITES = testSuite;
+	}	
+
+	public String getName() {
+		return NAME;
+	}
+
+	public void setName(String name) {
+		NAME = name;
+	}	
+}
+
+
+
+public class TestSuite {
+	List<TestCase> TEST_CASES;
+	String NAME;
+
+	public TestSuite(String name) {
+		NAME = name;
+		TEST_CASES = new LinkedList<TestCase>();
+	}
+
+	public void add(TestCase testCase) {
+		TEST_CASES.add(testCase);
+	}
+	
+	public List<TestCase> getTestCases() {
+		return TEST_CASES;
+	}
+
+	public void setCases(List<TestCase> testCases) {
+		TEST_CASES = testCases;
+	}	
+	
+	public String getName() {
+		return NAME;
+	}
+
+	public void setName(String name) {
+		NAME = name;
+	}	
+}
+
+
+public class TestCase {
+	List<TestStep> TEST_STEPS;
+	String NAME;
+
+	public TestCase(String name) {
+		NAME = name;
+		TEST_STEPS = new LinkedList<TestStep>();
+	}
+
+	public void add(TestStep testStep) {
+		TEST_STEPS.add(testStep);
+	}
+	
+	public List<TestStep> getTestSteps() {
+		return TEST_STEPS;
+	}
+
+	public void setTestSteps(List<TestStep> testSteps) {
+		TEST_STEPS = testSteps;
+	}	
+
+	public String getName() {
+		return NAME;
+	}
+
+	public void setName(String name) {
+		NAME = name;
+	}	
+}
+
+
+public class TestStep {
+	
+	String REQUEST_RAW;
+	String RESPONSE_RAW;
+	String ASSERTIONS;
+	boolean RESULT;
+	String NAME;
+
+	public TestStep(String name) {
+		NAME = name;
+	}
+
+	public void setRequestRaw(String requestRaw) {
+		REQUEST_RAW = requestRaw;
+	}
+
+	public String getRequestRaw() {
+		return REQUEST_RAW;
+	}
+
+	public void setResponseRaw(String responseRaw) {
+		RESPONSE_RAW = responseRaw;
+	}
+
+	public String getResponseRaw() {
+		return RESPONSE_RAW;
+	}
+
+	public void setAssertions(String assertions) {
+		ASSERTIONS = assertions;
+	}
+
+	public String getAssertions() {
+		return ASSERTIONS;
+	}
+
+	public void setResult(boolean result) {
+		RESULT = result;
+	}
+
+	public boolean getResult() {
+		return RESULT;
+	}
+
+	public String getName() {
+		return NAME;
+	}
+
+	public void setName(String name) {
+		NAME = name;
+	}	
+}
+
+
