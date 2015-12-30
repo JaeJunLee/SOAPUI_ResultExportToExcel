@@ -3,16 +3,188 @@ import com.eviware.soapui.security.assertion.ValidHttpStatusCodesAssertion;
 import com.eviware.soapui.security.assertion.InvalidHttpStatusCodesAssertion;
 import com.eviware.soapui.impl.wsdl.teststeps.assertions.basic.SimpleContainsAssertion;
 import com.eviware.soapui.impl.wsdl.teststeps.assertions.ProGroovyScriptAssertion;
+import org.apache.poi.EmptyFileException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
-/*
-List temps = testProject.getTestSuites();
-for(TestSuite temp in temps){
-	log.info temp.getName()
-}
-*/
 TestProject project = getProject();
+String[] columnHeaders = ["", "","", "", "", "",  "","",  "", "", "", "", "", ""  ];
+String excelPath = "D:\\TestCase.xlsx";
 
+ExcelManager excelManager = new ExcelManager(columnHeaders);
+excelManager.writeTestCase(project);
+//log.info excelManager.temp
+excelManager.createExcel(excelPath);
+
+
+public class ExcelManager {
+	String[] COLUMN_HEADERS;
+	XSSFWorkbook EXCEL_TC;
+	int ROW;
+	Sheet CRR_SHEET;
+	String temp;
+	public ExcelManager(String[] columnHeaders) {
+		COLUMN_HEADERS = columnHeaders;
+		EXCEL_TC = new XSSFWorkbook();
+		init();
+	}
+
+	public void writeTestCase(TestProject project) {
+		List<TestSuite> tSuites = project.getTestSuites();
+		List<TestCase> tCases;
+		List<TestStep> tSteps;
+		String tSuiteName;
+		String tCaseName;
+	
+		for(TestSuite tSuite in tSuites) {
+			tSuiteName = tSuite.getName();
+			tCases = tSuite.getTestCases();
+			
+			for(TestCase tCase in tCases) {
+				tCaseName = tCase.getName();
+				tSteps = tCase.getTestSteps();
+				
+				for(TestStep tStep in tSteps) {
+					writeTC(tStep, tSuiteName, tCaseName);
+				}
+			}
+			
+		}
+		/*
+		Point p = new Point();
+		row = sheet1.createRow(0);
+		cell.setCellValue(COLUMN_HEADERS[i]);
+		*/
+	}
+
+	private void writeTC(TestStep step, String suiteName, String  caseName) {
+		int colCount = 0;
+		Row row = CRR_SHEET.createRow(ROW++);
+		Cell cell = createCell(row, colCount++, "center");
+        	cell.setCellValue("TCID_" + ROW);
+
+        	cell = createCell(row, colCount++, "center");
+        	cell.setCellValue("");
+
+		cell = createCell(row, colCount++, "center");
+        	cell.setCellValue(suiteName);
+
+		cell = createCell(row, colCount++, "center");
+        	cell.setCellValue(caseName);
+
+        	cell = createCell(row, colCount++, "center");
+        	cell.setCellValue(step.getName());
+
+        	cell = createCell(row, colCount++, "left");
+        	cell.setCellValue("");
+
+        	cell = createCell(row, colCount++, "left");
+        	cell.setCellValue(step.getRequestRaw());
+
+        	cell = createCell(row, colCount++, "left");
+        	cell.setCellValue(step.getResponseRaw());
+
+        	cell = createCell(row, colCount++, "left");
+        	cell.setCellValue(step.getAssertions());
+        	
+		cell = createCell(row, colCount++, "center");
+        	cell.setCellValue(step.getResult());
+
+        	cell = createCell(row, colCount++, "center");
+        	cell.setCellValue("JAE");
+
+        	cell = createCell(row, colCount++, "left");
+        	cell.setCellValue("");
+
+        	cell = createCell(row, colCount++, "left");
+        	cell.setCellValue("");
+
+        	cell = createCell(row, colCount++, "left");
+        	cell.setCellValue("");
+        	
+	}
+
+	private Cell createCell(Row row, int colCount, String align) {
+		CellStyle cellStyle = EXCEL_TC.createCellStyle();
+		cellStyle.setBorderTop(CellStyle.BORDER_THIN);                        
+        	cellStyle.setBorderLeft(CellStyle.BORDER_THIN);
+        	cellStyle.setBorderRight(CellStyle.BORDER_THIN);
+        	cellStyle.setBorderBottom(CellStyle.BORDER_THIN);
+		if(align.equals("right")) {
+			cellStyle.setAlignment(HSSFCellStyle.ALIGN_RIGHT);
+		} else if(align.equals("left")) {
+			cellStyle.setAlignment(HSSFCellStyle.ALIGN_LEFT);
+		} else {
+			cellStyle.setAlignment(HSSFCellStyle.ALIGN_CENTER);
+		}
+		
+		Cell cell = row.createCell(colCount);
+		cell.setCellStyle(cellStyle);
+
+		return cell;
+	}
+
+	public String testM() {
+		return temp;
+	}
+	
+	public void createExcel(String path) {
+		try {
+			File xlsFile = new File(path);
+            	FileOutputStream fileOut = new FileOutputStream(xlsFile);
+            	EXCEL_TC.write(fileOut);
+        	} catch (FileNotFoundException e) {
+			e.printStackTrace();
+        	} catch (IOException e) {
+            	e.printStackTrace();
+        	}
+	}
+
+	private void init() {
+		CRR_SHEET  = EXCEL_TC.createSheet("Sheet1");
+
+        	CellStyle cellStyle = EXCEL_TC.createCellStyle();
+        	cellStyle.setWrapText(true);
+        	cellStyle.setAlignment(HSSFCellStyle.ALIGN_CENTER);
+        	cellStyle.setFillForegroundColor(HSSFColor.YELLOW.index);
+        	cellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+        	cellStyle.setBorderTop(CellStyle.BORDER_THIN);                        
+        	cellStyle.setBorderLeft(CellStyle.BORDER_THIN);
+        	cellStyle.setBorderRight(CellStyle.BORDER_THIN);
+        	cellStyle.setBorderBottom(CellStyle.BORDER_THIN);
+        
+        	XSSFFont font = EXCEL_TC.createFont();
+        	font.setFontHeightInPoints((short)10);
+        	cellStyle.setFont(font);
+   
+        	Row row = null;
+        	Cell cell = null;
+        
+        	row = CRR_SHEET.createRow(ROW++);
+ 
+		for(int i=0; i<COLUMN_HEADERS.size(); i++ ) {
+			CRR_SHEET.setColumnWidth(i, 5000);
+        		cell = row.createCell(i);
+        		cell.setCellValue(COLUMN_HEADERS[i]);
+        		cell.setCellStyle(cellStyle);
+        		//log.info COLUMN_HEADERS[i];
+		}
+       
+	}
+	
+}
 
 
 public TestProject getProject() {
@@ -44,11 +216,11 @@ public TestProject getProject() {
 public TestStep makeTestStep(RestTestRequestStep testStep) {
 	TestStep step = new TestStep(testStep.getName()); 
 	try {
-		step.setRequestRaw(new String(testStep.testRequest.response.rawResponseData));
+		step.setRequestRaw(new String(testStep.testRequest.response.rawRequestData));
 	}catch(Exception e) { }
 
 	try {
-		step.setResponseRaw(new String(testStep.testRequest.response.rawRequestData));
+		step.setResponseRaw(new String(testStep.testRequest.response.rawResponseData));
 	}catch(Exception e) { }
 
 	try {
@@ -69,11 +241,11 @@ public String getAssertions(RestTestRequestStep step) {
 		//log.info e.getToken() //gives the value of the content to search for
 		
 		if( assertion instanceof ValidHttpStatusCodesAssertion || assertion instanceof InvalidHttpStatusCodesAssertion){
-			assertionText = assertionText + assertion.LABEL + " Expected = " + assertion.codes + "\n";
+			assertionText = assertionText + "* " + assertion.LABEL + " Expected = " + assertion.codes + "\n";
           } else if(assertion instanceof SimpleContainsAssertion) {
-          	assertionText = assertionText + assertion.LABEL + " Expected = " + assertion.getToken() + "\n";
+          	assertionText = assertionText + "* " + assertion.LABEL + " Expected = " + assertion.getToken() + "\n";
           } else if(assertion instanceof ProGroovyScriptAssertion) {
-			assertionText = assertionText + assertion.LABEL + "\n";
+			assertionText = assertionText + "* " + assertion.LABEL + "\n";
           }
            assertion.status
 	}
@@ -81,15 +253,15 @@ public String getAssertions(RestTestRequestStep step) {
 }
 
 
-public boolean getAssertionResult(RestTestRequestStep step) {
+public String getAssertionResult(RestTestRequestStep step) {
 	def assertionsList = step.getAssertionList()
 	for( assertion in assertionsList){
-		if(assertion.status.equals("FAILED")) {
-			return false;
-		} else if(assertion.status.equals("VALID")) {
-			return true;
-		} else {
-			return false;
+		if(assertion.status.toString().equals("FAILED")) {
+			return "Fail";
+		} else if(assertion.status.toString().equals("VALID")) {
+			return "Pass";
+		}  else {
+			return "";
 		}
 	}
 }
@@ -195,7 +367,7 @@ public class TestStep {
 	String REQUEST_RAW;
 	String RESPONSE_RAW;
 	String ASSERTIONS;
-	boolean RESULT;
+	String RESULT;
 	String NAME;
 
 	public TestStep(String name) {
@@ -226,11 +398,11 @@ public class TestStep {
 		return ASSERTIONS;
 	}
 
-	public void setResult(boolean result) {
+	public void setResult(String result) {
 		RESULT = result;
 	}
 
-	public boolean getResult() {
+	public String getResult() {
 		return RESULT;
 	}
 
