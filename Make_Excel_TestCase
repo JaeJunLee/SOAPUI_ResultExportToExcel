@@ -18,14 +18,19 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+boolean disableFlag = true; // diabled item is not make > true(not make) false(make)
+String[] columnHeaders = ["TCID", "TestSuite", "TestCase", "TestStep", "Method of Procedure",  "Request","Response",  "ExpectedResult(Assersion)", "Result", "Tester", "Defect Priority", "Comment"  ];
+String excelPath;
+if(System.getProperty("sun.arch.data.model").toString().equals("64")){
+	excelPath = "D:\\TestCase.xlsx";
+} else {
+	excelPath = "D:/TestCase.xlsx";
+}
 
-TestProject project = getProject();
-String[] columnHeaders = ["", "","", "", "", "",  "","",  "", "", "", "", "", ""  ];
-String excelPath = "D:\\TestCase.xlsx";
+TestProject project = getProject(disableFlag);
 
 ExcelManager excelManager = new ExcelManager(columnHeaders);
 excelManager.writeTestCase(project);
-//log.info excelManager.temp
 excelManager.createExcel(excelPath);
 
 
@@ -57,38 +62,32 @@ public class ExcelManager {
 				tSteps = tCase.getTestSteps();
 				
 				for(TestStep tStep in tSteps) {
-					writeTC(tStep, tSuiteName, tCaseName);
+					writeTC(tStep, project.getName(), tSuiteName, tCaseName);
 				}
 			}
 			
 		}
-		/*
-		Point p = new Point();
-		row = sheet1.createRow(0);
-		cell.setCellValue(COLUMN_HEADERS[i]);
-		*/
 	}
 
-	private void writeTC(TestStep step, String suiteName, String  caseName) {
+	private void writeTC(TestStep step, String projectName, String suiteName, String  caseName) {
+		//String[] columnHeaders = ["TCID", "TestSuite", "TestCase", "TestStep", "Method of Procedure",  "Request","Response",  "ExpectedResult(Assersion)", "Result", "Tester", "Defect Priority", "Comment"  ];
 		int colCount = 0;
 		Row row = CRR_SHEET.createRow(ROW++);
+		row.setHeight((short)3000); 
 		Cell cell = createCell(row, colCount++, "center");
-        	cell.setCellValue("TCID_" + ROW);
+        	cell.setCellValue(projectName + "_" + String.format("%03d", ROW));
 
         	cell = createCell(row, colCount++, "center");
-        	cell.setCellValue("");
-
-		cell = createCell(row, colCount++, "center");
         	cell.setCellValue(suiteName);
 
 		cell = createCell(row, colCount++, "center");
         	cell.setCellValue(caseName);
 
-        	cell = createCell(row, colCount++, "center");
+		cell = createCell(row, colCount++, "center");
         	cell.setCellValue(step.getName());
 
         	cell = createCell(row, colCount++, "left");
-        	cell.setCellValue("");
+        	cell.setCellValue(getMethodOfProcedure(projectName, suiteName, caseName, step.getName()));
 
         	cell = createCell(row, colCount++, "left");
         	cell.setCellValue(step.getRequestRaw());
@@ -98,22 +97,27 @@ public class ExcelManager {
 
         	cell = createCell(row, colCount++, "left");
         	cell.setCellValue(step.getAssertions());
-        	
-		cell = createCell(row, colCount++, "center");
-        	cell.setCellValue(step.getResult());
 
         	cell = createCell(row, colCount++, "center");
-        	cell.setCellValue("JAE");
+        	cell.setCellValue(step.getResult());
+        	
+		cell = createCell(row, colCount++, "center");
+        	cell.setCellValue("JAEJUN");
 
-        	cell = createCell(row, colCount++, "left");
+        	cell = createCell(row, colCount++, "center");
         	cell.setCellValue("");
 
-        	cell = createCell(row, colCount++, "left");
-        	cell.setCellValue("");
-
-        	cell = createCell(row, colCount++, "left");
+        	cell = createCell(row, colCount++, "center");
         	cell.setCellValue("");
         	
+	}
+
+	private String getMethodOfProcedure(String projectName, String suiteName, String  caseName, String StepName) {
+		StringBuilder result = new StringBuilder();
+		result.append("1. Start a SoapUI and Import a project\n");
+		result.append("2. ").append(projectName).append(" > ").append(suiteName).append(" > ").append(caseName).append(" > ").append(StepName).append(" Open\n");
+		result.append("3. Submit Request(Run)");
+		return result.toString();
 	}
 
 	private Cell createCell(Row row, int colCount, String align) {
@@ -122,6 +126,12 @@ public class ExcelManager {
         	cellStyle.setBorderLeft(CellStyle.BORDER_THIN);
         	cellStyle.setBorderRight(CellStyle.BORDER_THIN);
         	cellStyle.setBorderBottom(CellStyle.BORDER_THIN);
+        	cellStyle.setWrapText(true);
+
+        	XSSFFont font = cellStyle.getFont();
+        	font.setFontHeightInPoints((short)10);
+        	cellStyle.setFont(font);
+        	
 		if(align.equals("right")) {
 			cellStyle.setAlignment(HSSFCellStyle.ALIGN_RIGHT);
 		} else if(align.equals("left")) {
@@ -129,15 +139,12 @@ public class ExcelManager {
 		} else {
 			cellStyle.setAlignment(HSSFCellStyle.ALIGN_CENTER);
 		}
+		cellStyle.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
 		
 		Cell cell = row.createCell(colCount);
 		cell.setCellStyle(cellStyle);
 
 		return cell;
-	}
-
-	public String testM() {
-		return temp;
 	}
 	
 	public void createExcel(String path) {
@@ -164,7 +171,8 @@ public class ExcelManager {
         	cellStyle.setBorderLeft(CellStyle.BORDER_THIN);
         	cellStyle.setBorderRight(CellStyle.BORDER_THIN);
         	cellStyle.setBorderBottom(CellStyle.BORDER_THIN);
-        
+        	cellStyle.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+        	
         	XSSFFont font = EXCEL_TC.createFont();
         	font.setFontHeightInPoints((short)10);
         	cellStyle.setFont(font);
@@ -173,34 +181,45 @@ public class ExcelManager {
         	Cell cell = null;
         
         	row = CRR_SHEET.createRow(ROW++);
- 
+//String[] columnHeaders = ["TCID", "TestSuite", "TestCase", "TestStep", "Method of Procedure",  "Request","Response",  "ExpectedResult(Assersion)", "Result", "Tester", "Defect Priority", "Comment"  ];
+ 		String item;
 		for(int i=0; i<COLUMN_HEADERS.size(); i++ ) {
-			CRR_SHEET.setColumnWidth(i, 5000);
+			item = COLUMN_HEADERS[i];
+			
+			if(item.equals("Request") || item.equals("Response")) {
+				CRR_SHEET.setColumnWidth(i, 9000);
+			} else if(item.equals("Method of Procedure")) {
+				CRR_SHEET.setColumnWidth(i, 8000);
+			} else if(item.equals("ExpectedResult(Assersion)")) {
+				CRR_SHEET.setColumnWidth(i, 6000);
+			} else {
+				CRR_SHEET.setColumnWidth(i, 3500);
+			}
         		cell = row.createCell(i);
-        		cell.setCellValue(COLUMN_HEADERS[i]);
+        		cell.setCellValue(item);
         		cell.setCellStyle(cellStyle);
-        		//log.info COLUMN_HEADERS[i];
 		}
-       
 	}
-	
 }
 
 
-public TestProject getProject() {
+public TestProject getProject(boolean disableFlag) {
 	def currentProject = testRunner.testCase.testSuite.project;
 	TestProject testProject = new TestProject(currentProject.getName());
 	currentProject.getTestSuiteList().each {
-		
+
+		if(it.disabled && disableFlag) { return true; }
 		TestSuite testSuite = new TestSuite(it.getName());
 		testProject.add(testSuite);
 		
 		it.getTestCaseList().each {
-			
+
+			if(it.disabled && disableFlag) { return true; }
 			TestCase testCase= new TestCase(it.getName());
 			testSuite.add(testCase);
 			
 			it.getTestStepList().each {
+				if(it.disabled && disableFlag) { return true; }
 				if(it.toString().indexOf("RestTestRequestStep") == -1){  
 					return true;
 				}
@@ -237,9 +256,7 @@ public TestStep makeTestStep(RestTestRequestStep testStep) {
 public String getAssertions(RestTestRequestStep step) {
 	def assertionsList = step.getAssertionList()
 	String assertionText = "";
-	for( assertion in assertionsList){
-		//log.info e.getToken() //gives the value of the content to search for
-		
+	for( assertion in assertionsList){		
 		if( assertion instanceof ValidHttpStatusCodesAssertion || assertion instanceof InvalidHttpStatusCodesAssertion){
 			assertionText = assertionText + "* " + assertion.LABEL + " Expected = " + assertion.codes + "\n";
           } else if(assertion instanceof SimpleContainsAssertion) {
@@ -251,7 +268,6 @@ public String getAssertions(RestTestRequestStep step) {
 	}
 	return assertionText;
 }
-
 
 public String getAssertionResult(RestTestRequestStep step) {
 	def assertionsList = step.getAssertionList()
@@ -266,8 +282,6 @@ public String getAssertionResult(RestTestRequestStep step) {
 	}
 }
 
-
-
 public class TestProject {
 	List<TestSuite> TEST_SUITES;
 	String NAME;
@@ -276,29 +290,12 @@ public class TestProject {
 		NAME = name;
 		TEST_SUITES = new LinkedList<TestSuite>();
 	}
-
-	public void add(TestSuite suite) {
-		TEST_SUITES.add(suite);
-	}
-	
-	public List<TestSuite> getTestSuites() {
-		return TEST_SUITES;
-	}
-
-	public void setCases(List<TestSuite> testSuite) {
-		TEST_SUITES = testSuite;
-	}	
-
-	public String getName() {
-		return NAME;
-	}
-
-	public void setName(String name) {
-		NAME = name;
-	}	
+	public void add(TestSuite suite) { TEST_SUITES.add(suite); }
+	public List<TestSuite> getTestSuites() { return TEST_SUITES; }
+	public void setCases(List<TestSuite> testSuite) { TEST_SUITES = testSuite; }	
+	public String getName() { return NAME; }
+	public void setName(String name) { NAME = name; }	
 }
-
-
 
 public class TestSuite {
 	List<TestCase> TEST_CASES;
@@ -308,28 +305,12 @@ public class TestSuite {
 		NAME = name;
 		TEST_CASES = new LinkedList<TestCase>();
 	}
-
-	public void add(TestCase testCase) {
-		TEST_CASES.add(testCase);
-	}
-	
-	public List<TestCase> getTestCases() {
-		return TEST_CASES;
-	}
-
-	public void setCases(List<TestCase> testCases) {
-		TEST_CASES = testCases;
-	}	
-	
-	public String getName() {
-		return NAME;
-	}
-
-	public void setName(String name) {
-		NAME = name;
-	}	
+	public void add(TestCase testCase) { TEST_CASES.add(testCase); }
+	public List<TestCase> getTestCases() { return TEST_CASES; }
+	public void setCases(List<TestCase> testCases) { TEST_CASES = testCases; }	
+	public String getName() { return NAME; }
+	public void setName(String name) { NAME = name; }	
 }
-
 
 public class TestCase {
 	List<TestStep> TEST_STEPS;
@@ -339,80 +320,29 @@ public class TestCase {
 		NAME = name;
 		TEST_STEPS = new LinkedList<TestStep>();
 	}
-
-	public void add(TestStep testStep) {
-		TEST_STEPS.add(testStep);
-	}
-	
-	public List<TestStep> getTestSteps() {
-		return TEST_STEPS;
-	}
-
-	public void setTestSteps(List<TestStep> testSteps) {
-		TEST_STEPS = testSteps;
-	}	
-
-	public String getName() {
-		return NAME;
-	}
-
-	public void setName(String name) {
-		NAME = name;
-	}	
+	public void add(TestStep testStep) { TEST_STEPS.add(testStep); }
+	public List<TestStep> getTestSteps() { return TEST_STEPS; }
+	public void setTestSteps(List<TestStep> testSteps) { TEST_STEPS = testSteps; }	
+	public String getName() { return NAME; }
+	public void setName(String name) { NAME = name; }	
 }
 
-
 public class TestStep {
-	
 	String REQUEST_RAW;
 	String RESPONSE_RAW;
 	String ASSERTIONS;
 	String RESULT;
 	String NAME;
-
-	public TestStep(String name) {
-		NAME = name;
-	}
-
-	public void setRequestRaw(String requestRaw) {
-		REQUEST_RAW = requestRaw;
-	}
-
-	public String getRequestRaw() {
-		return REQUEST_RAW;
-	}
-
-	public void setResponseRaw(String responseRaw) {
-		RESPONSE_RAW = responseRaw;
-	}
-
-	public String getResponseRaw() {
-		return RESPONSE_RAW;
-	}
-
-	public void setAssertions(String assertions) {
-		ASSERTIONS = assertions;
-	}
-
-	public String getAssertions() {
-		return ASSERTIONS;
-	}
-
-	public void setResult(String result) {
-		RESULT = result;
-	}
-
-	public String getResult() {
-		return RESULT;
-	}
-
-	public String getName() {
-		return NAME;
-	}
-
-	public void setName(String name) {
-		NAME = name;
-	}	
+	
+	public TestStep(String name) { NAME = name; }
+	public void setRequestRaw(String requestRaw) { REQUEST_RAW = requestRaw; }
+	public String getRequestRaw() { return REQUEST_RAW; }
+	public void setResponseRaw(String responseRaw) { RESPONSE_RAW = responseRaw; }
+	public String getResponseRaw() { return RESPONSE_RAW; }
+	public void setAssertions(String assertions) { ASSERTIONS = assertions; }
+	public String getAssertions() { return ASSERTIONS; }
+	public void setResult(String result) { RESULT = result; }
+	public String getResult() { return RESULT; }
+	public String getName() { return NAME; }
+	public void setName(String name) { NAME = name; }	
 }
-
-
