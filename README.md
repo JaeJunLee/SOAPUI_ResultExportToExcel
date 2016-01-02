@@ -1,4 +1,4 @@
-# SOAPUI_ResultExportToExcel
+# SOAPUI_ResultExportToExce
 Groovy Script
 
 
